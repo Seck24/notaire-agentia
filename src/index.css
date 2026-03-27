@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  --color-brun-50: #FAF6F1;
+  --color-brun-100: #F5F0EB;
+  --color-brun-200: #E8DDD0;
+  --color-brun-300: #D4B896;
+  --color-brun-400: #C8A882;
+  --color-brun-500: #B8916A;
+  --color-brun-600: #A07050;
+  --color-brun-700: #6B4C2A;
+  --color-brun-800: #4A3020;
+  --color-brun-900: #2A1A10;
+}
+
+* { box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: #F5F0EB; color: #1A1A1A; margin: 0; }
+h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+#root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  text-align: left;
+  border: none;
+  min-height: 100svh;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(107, 76, 42, 0.08);
+  transition: box-shadow 0.2s ease;
+}
+.card:hover { box-shadow: 0 4px 20px rgba(107, 76, 42, 0.15); }
+
+.btn-primary {
+  background: #C8A882;
+  color: #1A1A1A;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.btn-primary:hover { background: #B8916A; }
+
+.btn-secondary {
+  background: white;
+  color: #6B4C2A;
+  border: 2px solid #C8A882;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.btn-secondary:hover { background: #F5F0EB; }
+
+input, textarea, select {
+  color: #1A1A1A;
+  background: #ffffff;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #9CA3AF;
+}
