@@ -1,12 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { Home, FilePlus, FolderOpen, Clock, Settings, Scale } from 'lucide-react'
+import { Home, FilePlus, Settings, Scale } from 'lucide-react'
 
 const navItems = [
   { to: '/', icon: Home, label: 'Accueil' },
   { to: '/nouvel-acte', icon: FilePlus, label: 'Nouvel Acte' },
-  { to: '/dossiers', icon: FolderOpen, label: 'Dossiers' },
-  { to: '/historique', icon: Clock, label: 'Historique' },
-  { to: '/parametres', icon: Settings, label: 'Paramètres' },
+  { to: '/parametres', icon: Settings, label: 'Parametres' },
 ]
 
 export default function Sidebar() {
@@ -101,7 +99,7 @@ export default function Sidebar() {
           Cabinet
         </div>
         <div style={{ fontSize: '13px', color: '#6B4C2A', fontWeight: 600 }}>
-          Étude Notariale
+          Etude Notariale
         </div>
         <div style={{ fontSize: '12px', color: '#9A8A7A', marginTop: '2px' }}>
           notaire-agentia.preo-ia.info

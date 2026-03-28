@@ -3,8 +3,6 @@ import Sidebar from './components/layout/Sidebar'
 import BottomNav from './components/layout/BottomNav'
 import Home from './pages/Home'
 import NouvelActe from './pages/NouvelActe'
-import Dossiers from './pages/Dossiers'
-import Historique from './pages/Historique'
 import Parametres from './pages/Parametres'
 
 export default function App() {
@@ -31,8 +29,6 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/nouvel-acte" element={<NouvelActe />} />
-            <Route path="/dossiers" element={<Dossiers />} />
-            <Route path="/historique" element={<Historique />} />
             <Route path="/parametres" element={<Parametres />} />
           </Routes>
         </main>
