@@ -78,8 +78,11 @@ export default function UploadZone({ documents_requis = [], onFilesChange }) {
         color: '#1A1A1A',
         fontFamily: "'Playfair Display', serif",
       }}>
-        Documents requis
+        Documents du dossier
       </h3>
+      <p style={{ margin: '-8px 0 16px', fontSize: '12px', color: '#9A8A7A' }}>
+        Optionnel — deposez les documents pour remplissage automatique
+      </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
         {documents_requis.map((doc) => {
@@ -102,16 +105,25 @@ export default function UploadZone({ documents_requis = [], onFilesChange }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
                   {hasFile ? (
                     <CheckCircle size={18} color="#4CAF50" style={{ flexShrink: 0 }} />
-                  ) : doc.required ? (
-                    <AlertTriangle size={18} color="#E67E22" style={{ flexShrink: 0 }} />
                   ) : (
-                    <Upload size={18} color="#9A8A7A" style={{ flexShrink: 0 }} />
+                    <Upload size={18} color="#B8B0A6" style={{ flexShrink: 0 }} />
                   )}
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#1A1A1A' }}>
                       {doc.label}
-                      {doc.required && <span style={{ color: '#E53935', marginLeft: '4px' }}>*</span>}
-                      {!doc.required && <span style={{ color: '#9A8A7A', marginLeft: '6px', fontWeight: 400, fontSize: '11px' }}>(optionnel)</span>}
+                      {!hasFile && (
+                        <span style={{
+                          marginLeft: '8px',
+                          padding: '2px 8px',
+                          borderRadius: '10px',
+                          background: '#F0EDE8',
+                          color: '#9A8A7A',
+                          fontSize: '10px',
+                          fontWeight: 500,
+                        }}>
+                          {doc.required ? 'Non fourni' : 'Optionnel'}
+                        </span>
+                      )}
                     </div>
                     {hasFile && (
                       <div style={{ fontSize: '11px', color: '#5A5A5A', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

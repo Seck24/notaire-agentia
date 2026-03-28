@@ -49,8 +49,8 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
   const { incrementActes } = useAppStore()
 
   const validate = () => {
-    const missing = []
-    if (!schema) return missing
+    const missingFields = []
+    if (!schema) return missingFields
 
     schema.sections.forEach((section) => {
       if (section.repetable) {
@@ -58,7 +58,7 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
         entries.forEach((entry, idx) => {
           section.fields.forEach((field) => {
             if (field.required && !entry[field.id]) {
-              missing.push(`${section.label} #${idx + 1} : ${field.label}`)
+              missingFields.push(`${section.label} #${idx + 1} : ${field.label}`)
             }
           })
         })
@@ -66,29 +66,37 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
         const sectionData = formData[section.id] || {}
         section.fields.forEach((field) => {
           if (field.required && !sectionData[field.id]) {
-            missing.push(`${section.label} : ${field.label}`)
+            missingFields.push(`${section.label} : ${field.label}`)
           }
         })
       }
     })
 
-    if (schema.documents_requis) {
-      schema.documents_requis.forEach((doc) => {
-        if (doc.required && (!files || !files[doc.id])) {
-          missing.push(`Document : ${doc.label}`)
-        }
-      })
-    }
+    return missingFields
+  }
 
-    return missing
+  const checkDocuments = () => {
+    if (!schema || !schema.documents_requis) return { hasAny: false, missingCount: 0 }
+    const totalDocs = schema.documents_requis.length
+    const uploadedCount = files ? Object.keys(files).filter(k => !k.startsWith('extra_')).length : 0
+    return { hasAny: uploadedCount > 0, missingCount: totalDocs - uploadedCount }
   }
 
   const handleGenerate = async () => {
-    const missing = validate()
-    if (missing.length > 0) {
-      setMissingItems(missing)
+    // Only form fields are blocking
+    const missingFields = validate()
+    if (missingFields.length > 0) {
+      setMissingItems(missingFields)
       setShowMissing(true)
       return
+    }
+
+    // Documents are optional — just warn
+    const docStatus = checkDocuments()
+    if (!docStatus.hasAny) {
+      setAvertissement("Aucun document fourni — l'acte sera redige uniquement depuis les informations saisies manuellement.")
+    } else if (docStatus.missingCount > 0) {
+      setAvertissement("Certains documents n'ont pas ete fournis. L'acte sera genere avec les documents disponibles.")
     }
 
     setShowMissing(false)
@@ -335,7 +343,7 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
             marginBottom: '10px', color: '#E65100', fontSize: '14px', fontWeight: 600,
           }}>
             <AlertCircle size={18} />
-            Elements manquants ({missingItems.length})
+            Champs obligatoires manquants ({missingItems.length})
           </div>
           <ul style={{ margin: 0, paddingLeft: '20px', listStyleType: 'disc' }}>
             {missingItems.map((item, idx) => (
@@ -346,6 +354,35 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
           </ul>
         </div>
       )}
+
+      {!showMissing && (() => {
+        const ds = checkDocuments()
+        if (!ds.hasAny) return (
+          <div style={{
+            background: '#FFFDE7', border: '1px solid #FFF9C4',
+            borderRadius: '8px', padding: '12px 16px', marginBottom: '16px',
+            display: 'flex', alignItems: 'center', gap: '10px',
+          }}>
+            <AlertTriangle size={16} color="#F9A825" style={{ flexShrink: 0 }} />
+            <p style={{ margin: 0, fontSize: '12px', color: '#6D5F00', lineHeight: 1.4 }}>
+              Aucun document fourni — l'acte sera redige uniquement depuis les informations saisies manuellement.
+            </p>
+          </div>
+        )
+        if (ds.missingCount > 0) return (
+          <div style={{
+            background: '#FFFDE7', border: '1px solid #FFF9C4',
+            borderRadius: '8px', padding: '12px 16px', marginBottom: '16px',
+            display: 'flex', alignItems: 'center', gap: '10px',
+          }}>
+            <AlertTriangle size={16} color="#F9A825" style={{ flexShrink: 0 }} />
+            <p style={{ margin: 0, fontSize: '12px', color: '#6D5F00', lineHeight: 1.4 }}>
+              Certains documents n'ont pas ete fournis. L'acte sera genere avec les documents disponibles.
+            </p>
+          </div>
+        )
+        return null
+      })()}
 
       <button
         className="btn-primary"
