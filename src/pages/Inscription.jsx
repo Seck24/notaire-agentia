@@ -19,11 +19,12 @@ export default function Inscription() {
     email: '',
     telephone: '',
     ville: '',
+    villeAutre: false,
     password: '',
     confirmPassword: '',
   })
 
-  const update = (field, value) => setForm({ ...form, [field]: value })
+  const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
 
   const goStep2 = () => {
     setError(null)
