@@ -1,48 +1,64 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './components/layout/Sidebar'
 import BottomNav from './components/layout/BottomNav'
+import ProtectedRoute from './components/ProtectedRoute'
+import BandeauEssai from './components/BandeauEssai'
 import Home from './pages/Home'
 import NouvelActe from './pages/NouvelActe'
-import Parametres from './pages/Parametres'
+import Profil from './pages/Profil'
+import Login from './pages/Login'
+import Inscription from './pages/Inscription'
+import Expiration from './pages/Expiration'
 
-export default function App() {
+function ProtectedLayout({ children }) {
   return (
-    <BrowserRouter>
+    <ProtectedRoute>
       <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F0EB' }}>
         {/* Sidebar - desktop only */}
-        <div style={{ display: 'none' }} className="sidebar-wrapper">
-          <Sidebar />
-        </div>
-
-        {/* Sidebar visible md+ */}
-        <div style={{}} id="desktop-sidebar">
+        <div id="desktop-sidebar">
           <Sidebar />
         </div>
 
         {/* Main content */}
-        <main style={{
-          flex: 1,
-          marginLeft: '260px',
-          paddingBottom: '80px',
-          minHeight: '100vh',
-        }} id="main-content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/nouvel-acte" element={<NouvelActe />} />
-            <Route path="/parametres" element={<Parametres />} />
-          </Routes>
-        </main>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }} id="main-content">
+          <BandeauEssai />
+          <main style={{ flex: 1, paddingBottom: '80px' }}>
+            {children}
+          </main>
+        </div>
 
         {/* Bottom nav - mobile only */}
         <div id="mobile-nav">
           <BottomNav />
         </div>
       </div>
+    </ProtectedRoute>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/inscription" element={<Inscription />} />
+        <Route path="/expiration" element={<Expiration />} />
+
+        {/* Protected routes */}
+        <Route path="/" element={<ProtectedLayout><Home /></ProtectedLayout>} />
+        <Route path="/nouvel-acte" element={<ProtectedLayout><NouvelActe /></ProtectedLayout>} />
+        <Route path="/profil" element={<ProtectedLayout><Profil /></ProtectedLayout>} />
+        <Route path="/parametres" element={<Navigate to="/profil" replace />} />
+
+        {/* Default */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
 
       <style>{`
         @media (max-width: 768px) {
           #desktop-sidebar { display: none !important; }
-          #main-content { margin-left: 0 !important; padding-bottom: 80px !important; }
+          #main-content { margin-left: 0 !important; }
           #mobile-nav { display: block; }
         }
         @media (min-width: 769px) {

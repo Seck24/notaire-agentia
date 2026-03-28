@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware'
 const useAppStore = create(persist(
   (set) => ({
     stats: { actes_ce_mois: 0, actes_generes: 0, temps_economise: 0 },
-    cabinetInfo: { nom: '', logo: null, utilisateur: '' },
+    cabinetInfo: { nom: '', logo: null, utilisateur: '', token_api: '' },
     incrementActes: () => set((state) => ({
       stats: {
         ...state.stats,

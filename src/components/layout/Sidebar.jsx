@@ -1,13 +1,16 @@
 import { NavLink } from 'react-router-dom'
-import { Home, FilePlus, Settings, Scale } from 'lucide-react'
+import { Home, FilePlus, User, Scale } from 'lucide-react'
+import useAuthStore from '../../store/useAuthStore'
 
 const navItems = [
   { to: '/', icon: Home, label: 'Accueil' },
   { to: '/nouvel-acte', icon: FilePlus, label: 'Nouvel Acte' },
-  { to: '/parametres', icon: Settings, label: 'Parametres' },
+  { to: '/profil', icon: User, label: 'Profil' },
 ]
 
 export default function Sidebar() {
+  const { profil, joursRestants } = useAuthStore()
+
   return (
     <aside style={{
       width: '260px',
@@ -99,11 +102,22 @@ export default function Sidebar() {
           Cabinet
         </div>
         <div style={{ fontSize: '13px', color: '#6B4C2A', fontWeight: 600 }}>
-          Etude Notariale
+          {profil?.nom_cabinet || 'Etude Notariale'}
         </div>
-        <div style={{ fontSize: '12px', color: '#9A8A7A', marginTop: '2px' }}>
-          notaire-agentia.preo-ia.info
-        </div>
+        {profil?.statut_compte === 'essai' && joursRestants != null && (
+          <div style={{
+            marginTop: '6px',
+            display: 'inline-block',
+            padding: '2px 8px',
+            borderRadius: '10px',
+            fontSize: '11px',
+            fontWeight: 600,
+            background: joursRestants > 7 ? '#E8F5E9' : joursRestants >= 4 ? '#FFF3E0' : '#FFEBEE',
+            color: joursRestants > 7 ? '#2E7D32' : joursRestants >= 4 ? '#E65100' : '#C62828',
+          }}>
+            {joursRestants}j restants
+          </div>
+        )}
       </div>
     </aside>
   )

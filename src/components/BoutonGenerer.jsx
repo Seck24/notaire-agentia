@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Loader2, CheckCircle, AlertCircle, FileDown, AlertTriangle } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
+import useAuthStore from '../store/useAuthStore'
 
 const WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://automation.preo-ia.info/webhook'
 
@@ -47,6 +48,8 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
   const [erreur, setErreur] = useState(null)
   const [avertissement, setAvertissement] = useState(null)
   const { incrementActes } = useAppStore()
+  const { profil } = useAuthStore()
+  const cabinetToken = profil?.token_api || ''
 
   const validate = () => {
     const missingFields = []
@@ -121,10 +124,6 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
           }
         }
       }
-
-      // Get cabinet token from store
-      const storeData = JSON.parse(localStorage.getItem('stats_cabinet') || '{}')
-      const cabinetToken = storeData?.state?.cabinetInfo?.token_api || ''
 
       // Step 1: send to n8n
       setLoadingStep(0)

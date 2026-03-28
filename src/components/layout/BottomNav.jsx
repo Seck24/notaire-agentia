@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { Home, FilePlus, Settings } from 'lucide-react'
+import { Home, FilePlus, User } from 'lucide-react'
 
 const navItems = [
   { to: '/', icon: Home, label: 'Accueil' },
   { to: '/nouvel-acte', icon: FilePlus, label: 'Nouvel Acte' },
-  { to: '/parametres', icon: Settings, label: 'Parametres' },
+  { to: '/profil', icon: User, label: 'Profil' },
 ]
 
 export default function BottomNav() {
