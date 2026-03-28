@@ -120,6 +120,7 @@ export default function NouvelActe() {
         formData={formData}
         files={files}
         schema={schema}
+        typeActe={type}
       />
     </div>
   )
