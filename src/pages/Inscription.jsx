@@ -205,8 +205,16 @@ export default function Inscription() {
                 <div>
                   <label style={labelStyle}>Ville</label>
                   <select
-                    value={form.ville}
-                    onChange={(e) => update('ville', e.target.value)}
+                    value={villes.includes(form.ville) ? form.ville : form.ville ? 'Autre' : ''}
+                    onChange={(e) => {
+                      if (e.target.value === 'Autre') {
+                        update('ville', '')
+                        update('villeAutre', true)
+                      } else {
+                        update('ville', e.target.value)
+                        update('villeAutre', false)
+                      }
+                    }}
                     style={{ ...inputStyle, cursor: 'pointer' }}
                   >
                     <option value="">Selectionnez une ville</option>
@@ -214,6 +222,15 @@ export default function Inscription() {
                       <option key={v} value={v}>{v}</option>
                     ))}
                   </select>
+                  {(form.villeAutre || (!villes.includes(form.ville) && form.ville)) && (
+                    <input
+                      type="text"
+                      value={villes.includes(form.ville) ? '' : form.ville}
+                      onChange={(e) => update('ville', e.target.value)}
+                      placeholder="Nom de votre ville"
+                      style={{ ...inputStyle, marginTop: '8px' }}
+                    />
+                  )}
                 </div>
               </div>
 
