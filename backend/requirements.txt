@@ -5,3 +5,4 @@ mistralai>=1.5
 anthropic>=0.42
 python-dotenv>=1.0
 pydantic>=2.10
+python-multipart>=0.0.9

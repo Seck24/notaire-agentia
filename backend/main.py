@@ -1,14 +1,14 @@
 """
 main.py — Notariat Agent IA — API FastAPI
-Remplace le workflow n8n par une API Python propre.
 Port : 8002
 """
 
+import os
 import logging
 from dotenv import load_dotenv
 
-# Charger le .env du projet parent (../env)
-load_dotenv("../.env")
+# Charger .env en dev local (ignoré si les vars sont déjà injectées par Coolify)
+load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,9 +29,11 @@ app = FastAPI(
     version="1.0.0",
 )
 
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "https://notaire-agentia.preo-ia.info,http://localhost:5173")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in ALLOWED_ORIGINS.split(",")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
