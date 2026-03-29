@@ -1,0 +1,259 @@
+{
+  "name": "NotaireAgent - Generer Acte",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generer-acte",
+        "responseMode": "lastNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      },
+      "id": "webhook-entry",
+      "name": "1. Webhook Entree",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "generer-acte"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/profils_cabinets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "select", "value": "cabinet_id,nom_cabinet,plan" },
+            { "name": "token_api", "value": "=eq.{{ $json.body.cabinet_token || $json.headers['x-cabinet-token'] }}" },
+            { "name": "actif", "value": "eq.true" },
+            { "name": "limit", "value": "1" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "verify-cabinet",
+      "name": "2. Verifier Cabinet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SUPABASE_HEADER_AUTH",
+          "name": "Supabase API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "cabinet-exists",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-cabinet",
+      "name": "Cabinet Valide?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.ANTHROPIC_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 2000,\n  \"system\": \"Tu es un assistant notarial expert en droit ivoirien et OHADA. Extrais les informations structurees des documents fournis. Reponds UNIQUEMENT en JSON valide, sans markdown, sans ```json. Pour chaque information identifiable, extrais la valeur. Si une information est illisible ou absente, mets null.\",\n  \"messages\": [{\n    \"role\": \"user\",\n    \"content\": [\n      {\n        \"type\": \"text\",\n        \"text\": \"Type d'acte: {{ $('1. Webhook Entree').item.json.body.type_acte }}\\n\\nInformations du formulaire deja saisies:\\n{{ JSON.stringify($('1. Webhook Entree').item.json.body.form_data || {}) }}\\n\\nAnalyse les documents joints et extrais toutes les informations pertinentes pour completer cet acte. Reponds en JSON.\"\n      }\n    ]\n  }]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "claude-extraction",
+      "name": "3. Extraction Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [940, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare 3 RAG queries\nconst webhookData = $('1. Webhook Entree').item.json.body;\nconst cabinetData = $('2. Verifier Cabinet').item.json[0];\nconst type_acte = webhookData.type_acte;\nconst cabinet_id = cabinetData.cabinet_id;\n\nreturn [\n  {\n    json: {\n      query_type: 'clauses',\n      search_text: `clauses ${type_acte} modele acte formulation`,\n      cabinet_id,\n      type_acte,\n      nb_resultats: 5\n    }\n  },\n  {\n    json: {\n      query_type: 'obligations',\n      search_text: `obligations legales conditions validite ${type_acte}`,\n      cabinet_id,\n      type_acte: null,\n      nb_resultats: 5\n    }\n  },\n  {\n    json: {\n      query_type: 'tarifs',\n      search_text: `tarifs frais notariaux ${type_acte} honoraires`,\n      cabinet_id,\n      type_acte: null,\n      nb_resultats: 3\n    }\n  }\n];"
+      },
+      "id": "prepare-rag",
+      "name": "4a. Preparer RAG",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [940, 420]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/recherche_rag",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requete_embedding\": null,\n  \"cabinet_id_param\": \"{{ $json.cabinet_id }}\",\n  \"type_acte_param\": {{ $json.type_acte ? '\"' + $json.type_acte + '\"' : 'null' }},\n  \"nb_resultats\": {{ $json.nb_resultats }}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "rag-search-placeholder",
+      "name": "4b. RAG Placeholder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1180, 420],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SUPABASE_HEADER_AUTH",
+          "name": "Supabase API Key"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.ANTHROPIC_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 4000,\n  \"system\": \"Tu es un redacteur d'actes notariaux expert en droit ivoirien et en droit OHADA. Tu rediges des actes juridiques professionnels, complets et conformes a la loi.\\n\\nREGLES ABSOLUES :\\n1. Utilise les formulations exactes des clauses types fournies\\n2. Respecte toutes les obligations legales citees\\n3. Integre les references legales (articles, lois) dans l'acte\\n4. Utilise le style notarial formel ivoirien\\n5. Structure l'acte selon les sections standards\\n6. Mentionne les tarifs applicables en fin d'acte\\n7. NE PAS inventer d'informations non fournies - utiliser [A COMPLETER]\\n8. L'acte est un DRAFT - ne pas le presenter comme definitif\",\n  \"messages\": [{\n    \"role\": \"user\",\n    \"content\": \"Redige un acte de {{ $('1. Webhook Entree').item.json.body.type_acte }} avec les informations suivantes :\\n\\nINFORMATIONS DU DOSSIER (saisies par le greffier) :\\n{{ JSON.stringify($('1. Webhook Entree').item.json.body.form_data || {}) }}\\n\\nINFORMATIONS EXTRAITES DES DOCUMENTS :\\n{{ $('3. Extraction Claude').item.json.content ? $('3. Extraction Claude').item.json.content[0].text : '{}' }}\\n\\nCABINET : {{ $('2. Verifier Cabinet').item.json[0].nom_cabinet }}\\nDATE : {{ new Date().toLocaleDateString('fr-FR') }}\\n\\nGenere l'acte complet et professionnel.\"\n  }]\n}",
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "claude-generation",
+      "name": "5. Generation Acte Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8001/generate-word",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type_acte\": \"{{ $('1. Webhook Entree').item.json.body.type_acte }}\",\n  \"texte_acte\": {{ JSON.stringify($('5. Generation Acte Claude').item.json.content[0].text) }},\n  \"cabinet_nom\": \"{{ $('2. Verifier Cabinet').item.json[0].nom_cabinet }}\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "generate-word",
+      "name": "6. Generer Word",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1640, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"filename\": \"{{ $json.filename }}\",\n  \"docx_base64\": \"{{ $json.docx_base64 }}\",\n  \"avertissement\": \"Ce document est un draft genere par IA. Il doit etre valide par le Notaire avant tout usage juridique.\"\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      },
+      "id": "respond-success",
+      "name": "7. Reponse PWA",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1880, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": false, \"error\": \"Cabinet non reconnu ou inactif. Verifiez votre token.\" }",
+        "responseCode": 401,
+        "options": {}
+      },
+      "id": "respond-401",
+      "name": "Erreur 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [940, 540]
+    }
+  ],
+  "connections": {
+    "1. Webhook Entree": {
+      "main": [
+        [{ "node": "2. Verifier Cabinet", "type": "main", "index": 0 }]
+      ]
+    },
+    "2. Verifier Cabinet": {
+      "main": [
+        [{ "node": "Cabinet Valide?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Cabinet Valide?": {
+      "main": [
+        [
+          { "node": "3. Extraction Claude", "type": "main", "index": 0 },
+          { "node": "4a. Preparer RAG", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Erreur 401", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "3. Extraction Claude": {
+      "main": [
+        [{ "node": "5. Generation Acte Claude", "type": "main", "index": 0 }]
+      ]
+    },
+    "5. Generation Acte Claude": {
+      "main": [
+        [{ "node": "6. Generer Word", "type": "main", "index": 0 }]
+      ]
+    },
+    "6. Generer Word": {
+      "main": [
+        [{ "node": "7. Reponse PWA", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": false,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true,
+    "executionTimeout": 120
+  },
+  "tags": [
+    { "name": "notariat" },
+    { "name": "production" }
+  ]
+}
