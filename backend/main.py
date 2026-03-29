@@ -15,6 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routes.actes import router as actes_router
 from routes.dossier import router as dossier_router
+from routes.conseil import router as conseil_router
+from routes.diagnostic import router as diagnostic_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,6 +39,8 @@ app.add_middleware(
 
 app.include_router(actes_router)
 app.include_router(dossier_router)
+app.include_router(conseil_router)
+app.include_router(diagnostic_router)
 
 
 @app.get("/health")
