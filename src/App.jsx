@@ -6,6 +6,7 @@ import BandeauEssai from './components/BandeauEssai'
 import Home from './pages/Home'
 import NouvelActe from './pages/NouvelActe'
 import Profil from './pages/Profil'
+import Conseil from './pages/Conseil'
 import Login from './pages/Login'
 import Inscription from './pages/Inscription'
 import Expiration from './pages/Expiration'
@@ -48,6 +49,7 @@ export default function App() {
         {/* Protected routes */}
         <Route path="/" element={<ProtectedLayout><Home /></ProtectedLayout>} />
         <Route path="/nouvel-acte" element={<ProtectedLayout><NouvelActe /></ProtectedLayout>} />
+        <Route path="/conseil" element={<ProtectedLayout><Conseil /></ProtectedLayout>} />
         <Route path="/profil" element={<ProtectedLayout><Profil /></ProtectedLayout>} />
         <Route path="/parametres" element={<Navigate to="/profil" replace />} />
 

@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { Home, FilePlus, User, Scale } from 'lucide-react'
+import { Home, FilePlus, BookOpen, User, Scale } from 'lucide-react'
 import useAuthStore from '../../store/useAuthStore'
 
 const navItems = [
   { to: '/', icon: Home, label: 'Accueil' },
   { to: '/nouvel-acte', icon: FilePlus, label: 'Nouvel Acte' },
+  { to: '/conseil', icon: BookOpen, label: 'Conseil' },
   { to: '/profil', icon: User, label: 'Profil' },
 ]
 

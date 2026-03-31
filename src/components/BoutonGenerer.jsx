@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Loader2, CheckCircle, AlertCircle, FileDown, AlertTriangle } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import useAuthStore from '../store/useAuthStore'
+import { genererActe as genererActeAPI } from '../api'
 
+const API_URL = import.meta.env.VITE_API_URL || ''
 const WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://automation.preo-ia.info/webhook'
 
 const loadingMessages = [
@@ -125,42 +127,51 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
         }
       }
 
-      // Step 1: send to n8n
+      // Step 1: generate via FastAPI backend (if configured) or n8n fallback
       setLoadingStep(0)
 
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 120000)
-
-      const response = await fetch(`${WEBHOOK_URL}/generer-acte`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Cabinet-Token': cabinetToken,
-        },
-        body: JSON.stringify({
-          type_acte: typeActe,
-          form_data: formData,
-          documents: documentsBase64,
-        }),
-        signal: controller.signal,
-      })
-
-      clearTimeout(timeoutId)
 
       // Progress simulation while waiting
       const progressInterval = setInterval(() => {
         setLoadingStep((prev) => Math.min(prev + 1, loadingMessages.length - 1))
       }, 3000)
 
-      if (!response.ok) {
-        clearInterval(progressInterval)
-        if (response.status === 401) {
-          throw new Error('Cabinet non reconnu. Verifiez vos parametres.')
+      let result
+      if (API_URL) {
+        // Use FastAPI backend
+        result = await genererActeAPI(
+          { type_acte: typeActe, form_data: formData, cabinet_token: cabinetToken },
+          controller.signal
+        )
+      } else {
+        // Fallback: n8n webhook
+        const response = await fetch(`${WEBHOOK_URL}/generer-acte`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Cabinet-Token': cabinetToken,
+          },
+          body: JSON.stringify({
+            type_acte: typeActe,
+            form_data: formData,
+            documents: documentsBase64,
+          }),
+          signal: controller.signal,
+        })
+        if (!response.ok) {
+          clearInterval(progressInterval)
+          clearTimeout(timeoutId)
+          if (response.status === 401) {
+            throw new Error('Cabinet non reconnu. Verifiez vos parametres.')
+          }
+          throw new Error(`Erreur serveur (${response.status})`)
         }
-        throw new Error(`Erreur serveur (${response.status})`)
+        result = await response.json()
       }
 
-      const result = await response.json()
+      clearTimeout(timeoutId)
       clearInterval(progressInterval)
       setLoadingStep(loadingMessages.length)
 

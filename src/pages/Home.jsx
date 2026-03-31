@@ -57,7 +57,7 @@ export default function Home() {
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button
             className="btn-primary"
-            onClick={() => navigate('/nouvel-acte')}
+            onClick={() => document.getElementById('quick-actions')?.scrollIntoView({ behavior: 'smooth' })}
             style={{ background: 'white', color: '#6B4C2A', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <FilePlus size={16} />
@@ -97,7 +97,7 @@ export default function Home() {
       </div>
 
       {/* Quick actions — LARGER cards */}
-      <div style={{ marginBottom: '28px' }}>
+      <div id="quick-actions" style={{ marginBottom: '28px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <h2 style={{ margin: 0, fontSize: '20px', color: '#1A1A1A' }}>Creer un acte</h2>
         </div>
