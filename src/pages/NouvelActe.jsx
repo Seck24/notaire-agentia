@@ -113,7 +113,6 @@ export default function NouvelActe() {
       {/* Upload Zone */}
       <div style={{ marginBottom: '32px' }}>
         <UploadZone
-          documents_requis={schema.documents_requis}
           onFilesChange={handleFilesChange}
           onExtract={handleExtract}
           typeActe={type}
