@@ -28,7 +28,7 @@ const labelStyle = {
   marginBottom: '6px',
 }
 
-function FieldRenderer({ field, value, onChange, showErrors }) {
+function FieldRenderer({ field, value, onChange, showErrors, isAutoFilled }) {
   const hasError = showErrors && field.required && !value
   const style = hasError ? inputErrorStyle : inputStyle
 
@@ -37,6 +37,15 @@ function FieldRenderer({ field, value, onChange, showErrors }) {
       <label style={labelStyle}>
         {field.label}
         {field.required && <span style={{ color: '#E53935', marginLeft: '4px' }}>*</span>}
+        {isAutoFilled && (
+          <span style={{
+            marginLeft: '6px', padding: '1px 6px', borderRadius: '8px',
+            background: '#C8A88222', color: '#8B6914',
+            fontSize: '10px', fontWeight: 600,
+          }}>
+            ✦ Extrait
+          </span>
+        )}
       </label>
       {field.type === 'text' && (
         <input
@@ -100,10 +109,11 @@ function FieldRenderer({ field, value, onChange, showErrors }) {
   )
 }
 
-export default function FormulaireActe({ typeActe, initialData = {}, onChange, showErrors = false }) {
+export default function FormulaireActe({ typeActe, initialData = {}, onChange, showErrors = false, extractedData = {} }) {
   const schema = SCHEMAS[typeActe]
   const [formData, setFormData] = useState(initialData)
   const [collapsedSections, setCollapsedSections] = useState({})
+  const [autoFilledFields, setAutoFilledFields] = useState({}) // tracks {sectionId_fieldId: true}
 
   useEffect(() => {
     if (!schema) return
@@ -120,6 +130,25 @@ export default function FormulaireActe({ typeActe, initialData = {}, onChange, s
     })
     setFormData(init)
   }, [typeActe])
+
+  // Pre-fill from extracted data
+  useEffect(() => {
+    if (!extractedData || Object.keys(extractedData).length === 0) return
+    const newAutoFilled = {}
+    setFormData((prev) => {
+      const updated = { ...prev }
+      Object.entries(extractedData).forEach(([sectionId, fields]) => {
+        if (typeof fields === 'object' && !Array.isArray(fields)) {
+          updated[sectionId] = { ...(updated[sectionId] || {}), ...fields }
+          Object.keys(fields).forEach((fieldId) => {
+            newAutoFilled[`${sectionId}_${fieldId}`] = true
+          })
+        }
+      })
+      return updated
+    })
+    setAutoFilledFields(newAutoFilled)
+  }, [extractedData])
 
   useEffect(() => {
     if (onChange) onChange(formData)
@@ -273,6 +302,7 @@ export default function FormulaireActe({ typeActe, initialData = {}, onChange, s
                               value={entry[field.id]}
                               onChange={(val) => updateRepeatableField(section.id, idx, field.id, val)}
                               showErrors={showErrors}
+                              isAutoFilled={autoFilledFields[`${section.id}_${field.id}`]}
                             />
                           ))}
                         </div>
@@ -314,6 +344,7 @@ export default function FormulaireActe({ typeActe, initialData = {}, onChange, s
                         value={(formData[section.id] || {})[field.id]}
                         onChange={(val) => updateField(section.id, field.id, val)}
                         showErrors={showErrors}
+                        isAutoFilled={autoFilledFields[`${section.id}_${field.id}`]}
                       />
                     ))}
                   </div>

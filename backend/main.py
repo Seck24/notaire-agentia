@@ -17,6 +17,7 @@ from routes.actes import router as actes_router
 from routes.dossier import router as dossier_router
 from routes.conseil import router as conseil_router
 from routes.diagnostic import router as diagnostic_router
+from routes.extraction import router as extraction_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,6 +44,7 @@ app.include_router(actes_router)
 app.include_router(dossier_router)
 app.include_router(conseil_router)
 app.include_router(diagnostic_router)
+app.include_router(extraction_router)
 
 
 @app.get("/health")

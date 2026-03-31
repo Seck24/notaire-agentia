@@ -40,7 +40,7 @@ function base64ToBlob(b64, mimeType) {
   return new Blob(byteArrays, { type: mimeType })
 }
 
-export default function BoutonGenerer({ formData, files, schema, typeActe, onGenerate }) {
+export default function BoutonGenerer({ formData, files, schema, typeActe, onGenerate, completude = 100, onShowErrors }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [loadingStep, setLoadingStep] = useState(0)
   const [generated, setGenerated] = useState(false)
@@ -88,6 +88,20 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
   }
 
   const handleGenerate = async () => {
+    // Block if completude < 60%
+    if (completude < 60) {
+      if (onShowErrors) onShowErrors()
+      return
+    }
+
+    // Warn if 60-84% — confirm dialog
+    if (completude < 85) {
+      const ok = window.confirm(
+        `Complétude : ${completude}% — certains champs sont vides.\nContinuer quand même et générer l'acte ?`
+      )
+      if (!ok) return
+    }
+
     // Only form fields are blocking
     const missingFields = validate()
     if (missingFields.length > 0) {
@@ -397,15 +411,29 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
       <button
         className="btn-primary"
         onClick={handleGenerate}
+        disabled={completude < 60}
+        title={completude < 60 ? 'Complétez les champs obligatoires' : ''}
         style={{
           display: 'flex', alignItems: 'center', gap: '8px',
           fontSize: '15px', padding: '14px 28px', width: '100%',
           justifyContent: 'center',
+          opacity: completude < 60 ? 0.5 : 1,
+          cursor: completude < 60 ? 'not-allowed' : 'pointer',
         }}
       >
         <FileDown size={18} />
-        Generer le draft Word
+        {completude < 60
+          ? 'Complétez les champs obligatoires'
+          : completude < 85
+            ? 'Générer le draft Word (incomplet)'
+            : 'Générer le draft Word'
+        }
       </button>
+      {completude < 60 && (
+        <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#9A8A7A', textAlign: 'center' }}>
+          Remplissez au moins 60% des champs obligatoires pour générer l'acte.
+        </p>
+      )}
     </div>
   )
 }

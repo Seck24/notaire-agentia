@@ -1,11 +1,15 @@
 import { useState, useRef } from 'react'
-import { Upload, CheckCircle, AlertTriangle, X, FileText, Plus } from 'lucide-react'
+import { Upload, CheckCircle, AlertTriangle, X, FileText, Plus, Loader2, Sparkles } from 'lucide-react'
 
-export default function UploadZone({ documents_requis = [], onFilesChange }) {
+const API_URL = import.meta.env.VITE_API_URL || ''
+
+export default function UploadZone({ documents_requis = [], onFilesChange, onExtract, typeActe }) {
   const [docFiles, setDocFiles] = useState({})
   const [extraFiles, setExtraFiles] = useState([])
   const [isDragging, setIsDragging] = useState(false)
   const [dragTarget, setDragTarget] = useState(null)
+  const [extracting, setExtracting] = useState(false)
+  const [extractDone, setExtractDone] = useState(false)
   const fileInputRefs = useRef({})
   const extraFileRef = useRef(null)
 
@@ -22,12 +26,42 @@ export default function UploadZone({ documents_requis = [], onFilesChange }) {
     }
   }
 
+  const lancerExtraction = async (docFiles, extraFiles) => {
+    if (!API_URL || !onExtract) return
+    const allFiles = [...Object.values(docFiles), ...extraFiles].filter(Boolean)
+    if (allFiles.length === 0) return
+
+    setExtracting(true)
+    setExtractDone(false)
+    try {
+      const fd = new FormData()
+      allFiles.forEach((f) => fd.append('files', f))
+      fd.append('type_acte', typeActe || '')
+
+      const res = await fetch(`${API_URL}/api/extraire-documents`, {
+        method: 'POST',
+        body: fd,
+      })
+      if (!res.ok) throw new Error('extraction failed')
+      const data = await res.json()
+      if (data.champs && Object.keys(data.champs).length > 0) {
+        onExtract(data.champs)
+        setExtractDone(true)
+      }
+    } catch (e) {
+      // Silencieux si backend indisponible
+    } finally {
+      setExtracting(false)
+    }
+  }
+
   const handleDocUpload = (docId, e) => {
     const file = e.target.files?.[0]
     if (!file) return
     const updated = { ...docFiles, [docId]: file }
     setDocFiles(updated)
     updateParent(updated, extraFiles)
+    lancerExtraction(updated, extraFiles)
   }
 
   const handleDocDrop = (docId, e) => {
@@ -39,6 +73,7 @@ export default function UploadZone({ documents_requis = [], onFilesChange }) {
     const updated = { ...docFiles, [docId]: file }
     setDocFiles(updated)
     updateParent(updated, extraFiles)
+    lancerExtraction(updated, extraFiles)
   }
 
   const removeDocFile = (docId) => {
@@ -56,6 +91,7 @@ export default function UploadZone({ documents_requis = [], onFilesChange }) {
     const updated = [...extraFiles, ...files]
     setExtraFiles(updated)
     updateParent(docFiles, updated)
+    lancerExtraction(docFiles, updated)
   }
 
   const removeExtraFile = (idx) => {
@@ -72,16 +108,25 @@ export default function UploadZone({ documents_requis = [], onFilesChange }) {
 
   return (
     <div>
-      <h3 style={{
-        margin: '0 0 16px',
-        fontSize: '18px',
-        color: '#1A1A1A',
-        fontFamily: "'Playfair Display', serif",
-      }}>
-        Documents du dossier
-      </h3>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <h3 style={{ margin: 0, fontSize: '18px', color: '#1A1A1A', fontFamily: "'Playfair Display', serif" }}>
+          Documents du dossier
+        </h3>
+        {extracting && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#C8A882', fontSize: '12px' }}>
+            <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+            Extraction en cours…
+          </div>
+        )}
+        {extractDone && !extracting && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2E7D32', fontSize: '12px' }}>
+            <Sparkles size={14} />
+            Formulaire pré-rempli
+          </div>
+        )}
+      </div>
       <p style={{ margin: '-8px 0 16px', fontSize: '12px', color: '#9A8A7A' }}>
-        Optionnel — deposez les documents pour remplissage automatique
+        Optionnel — déposez les documents pour pré-remplissage automatique
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
@@ -241,10 +286,22 @@ export default function UploadZone({ documents_requis = [], onFilesChange }) {
         ref={extraFileRef}
         type="file"
         multiple
-        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
         onChange={handleExtraUpload}
         style={{ display: 'none' }}
       />
+
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '6px',
+        marginTop: '14px', padding: '10px 14px',
+        background: '#F5F0EB', borderRadius: '8px',
+      }}>
+        <AlertTriangle size={13} color="#9A8A7A" style={{ flexShrink: 0 }} />
+        <span style={{ fontSize: '11px', color: '#9A8A7A', lineHeight: 1.4 }}>
+          Documents analysés et supprimés après extraction — aucune donnée conservée.
+        </span>
+      </div>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }

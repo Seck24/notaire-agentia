@@ -5,6 +5,9 @@ import { SCHEMAS } from '../schemas/actes'
 import UploadZone from '../components/UploadZone'
 import FormulaireActe from '../components/FormulaireActe'
 import BoutonGenerer from '../components/BoutonGenerer'
+import BarreCompletude from '../components/BarreCompletude'
+import BlocParticularites from '../components/BlocParticularites'
+import { calculerCompletude } from '../components/BarreCompletude'
 
 export default function NouvelActe() {
   const [searchParams] = useSearchParams()
@@ -14,16 +17,16 @@ export default function NouvelActe() {
   const [formData, setFormData] = useState({})
   const [files, setFiles] = useState({})
   const [showErrors, setShowErrors] = useState(false)
+  const [extractedData, setExtractedData] = useState({})
+  const [particularites, setParticularites] = useState('')
 
   const schema = SCHEMAS[type]
 
-  // Redirect if type is invalid
   if (!type || !schema) {
     return <Navigate to="/" replace />
   }
 
   const handleBack = () => {
-    // Check if any data has been entered
     const hasData = Object.values(formData).some((section) => {
       if (Array.isArray(section)) {
         return section.some((entry) =>
@@ -38,7 +41,7 @@ export default function NouvelActe() {
 
     const hasFiles = Object.keys(files).length > 0
 
-    if (hasData || hasFiles) {
+    if (hasData || hasFiles || particularites) {
       const confirmed = window.confirm('Quitter ? Les donnees saisies seront perdues.')
       if (!confirmed) return
     }
@@ -53,6 +56,22 @@ export default function NouvelActe() {
   const handleFilesChange = useCallback((f) => {
     setFiles(f)
   }, [])
+
+  const handleExtract = useCallback((champs) => {
+    setExtractedData(champs)
+  }, [])
+
+  // Calcul complétude
+  const { pct: completude } = calculerCompletude(schema, {
+    ...formData,
+    ...(particularites ? { instructions: { particularites } } : {}),
+  })
+
+  // Merge particularites into formData for generation
+  const formDataAvecParticulrites = {
+    ...formData,
+    ...(particularites ? { instructions: { particularites } } : {}),
+  }
 
   return (
     <div style={{ padding: '32px 28px', maxWidth: '800px' }}>
@@ -96,6 +115,8 @@ export default function NouvelActe() {
         <UploadZone
           documents_requis={schema.documents_requis}
           onFilesChange={handleFilesChange}
+          onExtract={handleExtract}
+          typeActe={type}
         />
       </div>
 
@@ -109,18 +130,30 @@ export default function NouvelActe() {
           initialData={{}}
           onChange={handleFormChange}
           showErrors={showErrors}
+          extractedData={extractedData}
         />
       </div>
+
+      {/* Particularités */}
+      <BlocParticularites
+        value={particularites}
+        onChange={setParticularites}
+      />
+
+      {/* Barre de complétude */}
+      <BarreCompletude schema={schema} formData={formData} />
 
       {/* Separator */}
       <div style={{ height: '1px', background: '#E8DDD0', marginBottom: '32px' }} />
 
       {/* Bouton Generer */}
       <BoutonGenerer
-        formData={formData}
+        formData={formDataAvecParticulrites}
         files={files}
         schema={schema}
         typeActe={type}
+        completude={completude}
+        onShowErrors={() => setShowErrors(true)}
       />
     </div>
   )
