@@ -155,8 +155,8 @@ export default function Profil() {
         )}
       </div>
 
-      {/* STATUT ABONNEMENT */}
-      <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
+      {/* STATUT ABONNEMENT — DEMO MODE — masqué temporairement (ne pas supprimer) */}
+      <div className="card" style={{ display: 'none', padding: '24px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
           <div style={{
             width: '36px', height: '36px', borderRadius: '8px',

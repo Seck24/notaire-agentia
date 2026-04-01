@@ -11,7 +11,9 @@ export default function BandeauEssai() {
   const bgColor = jours > 7 ? '#2E7D32' : jours >= 4 ? '#E65100' : '#C62828'
 
   return (
+    // DEMO MODE — masqué temporairement (ne pas supprimer)
     <div style={{
+      display: 'none',
       background: bgColor,
       color: 'white',
       padding: '8px 16px',
