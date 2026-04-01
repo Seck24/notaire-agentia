@@ -65,7 +65,7 @@ export default function BarreCompletude({ schema, formData }) {
     <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
         <span style={{ fontSize: '13px', fontWeight: 600, color: '#1A1A1A' }}>
-          Complétude du dossier
+          Complétude du formulaire
         </span>
         <span style={{
           fontSize: '14px', fontWeight: 700, color: couleur,

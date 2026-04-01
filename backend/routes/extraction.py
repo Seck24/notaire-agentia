@@ -61,6 +61,27 @@ def lire_pdf(contenu: bytes) -> str:
         return ""
 
 
+def lire_docx(contenu: bytes) -> str:
+    try:
+        from docx import Document
+        doc = Document(io.BytesIO(contenu))
+        texte = [para.text for para in doc.paragraphs if para.text.strip()]
+        return "\n".join(texte)[:8000]
+    except Exception as e:
+        logger.warning(f"DOCX non lisible: {e}")
+        return ""
+
+
+def lire_doc(contenu: bytes) -> str:
+    try:
+        import mammoth
+        result = mammoth.extract_raw_text(io.BytesIO(contenu))
+        return result.value[:8000]
+    except Exception as e:
+        logger.warning(f"DOC non lisible: {e}")
+        return ""
+
+
 def extraire_via_vision(client, contenu: bytes, mime: str) -> str:
     """Extrait le texte d'une image via Claude Vision."""
     try:
@@ -113,6 +134,14 @@ async def extraire_documents(
             texte = extraire_via_vision(client, contenu, "image/jpeg")
         elif nom.endswith(".png"):
             texte = extraire_via_vision(client, contenu, "image/png")
+        elif nom.endswith(".webp"):
+            texte = extraire_via_vision(client, contenu, "image/webp")
+        elif nom.endswith(".gif"):
+            texte = extraire_via_vision(client, contenu, "image/gif")
+        elif nom.endswith(".docx"):
+            texte = lire_docx(contenu)
+        elif nom.endswith(".doc"):
+            texte = lire_doc(contenu)
         elif nom.endswith((".txt", ".md")):
             try:
                 texte = contenu.decode("utf-8")[:4000]

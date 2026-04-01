@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Building2, CheckCircle, Copy, LogOut, Clock, FileText, Crown, Loader2, Save } from 'lucide-react'
+import { Building2, CheckCircle, LogOut, FileText, Crown, Loader2, Save } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
 import useAuthStore from '../store/useAuthStore'
 import useAppStore from '../store/useAppStore'
@@ -13,8 +13,6 @@ export default function Profil() {
   const [nomEdit, setNomEdit] = useState(profil?.nom_cabinet || '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const [showToken, setShowToken] = useState(false)
 
   const handleSaveNom = async () => {
     setSaving(true)
@@ -38,18 +36,6 @@ export default function Profil() {
     await logout()
     navigate('/login')
   }
-
-  const copyToken = () => {
-    if (profil?.token_api) {
-      navigator.clipboard.writeText(profil.token_api)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-  }
-
-  const maskedToken = profil?.token_api
-    ? profil.token_api.slice(0, 8) + '****************************'
-    : '—'
 
   const statutCompte = profil?.statut_compte || 'essai'
   const joursEcoules = 14 - (joursRestants || 0)
@@ -269,64 +255,12 @@ export default function Profil() {
       {/* UTILISATION */}
       <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
         <h2 style={{ margin: '0 0 16px', fontSize: '16px', color: '#1A1A1A' }}>Utilisation</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          <div style={{
-            padding: '16px', background: '#FAF6F1', borderRadius: '8px', textAlign: 'center',
-          }}>
-            <FileText size={20} color="#C8A882" style={{ marginBottom: '8px' }} />
-            <div style={{ fontSize: '24px', fontWeight: 700, color: '#1A1A1A', fontFamily: "'Playfair Display', serif" }}>
-              {stats.actes_generes}
-            </div>
-            <div style={{ fontSize: '12px', color: '#9A8A7A', marginTop: '4px' }}>Actes generes</div>
+        <div style={{ padding: '16px', background: '#FAF6F1', borderRadius: '8px', textAlign: 'center', maxWidth: '180px' }}>
+          <FileText size={20} color="#C8A882" style={{ marginBottom: '8px' }} />
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#1A1A1A', fontFamily: "'Playfair Display', serif" }}>
+            {stats.actes_ce_mois}
           </div>
-          <div style={{
-            padding: '16px', background: '#FAF6F1', borderRadius: '8px', textAlign: 'center',
-          }}>
-            <Clock size={20} color="#6B4C2A" style={{ marginBottom: '8px' }} />
-            <div style={{ fontSize: '24px', fontWeight: 700, color: '#1A1A1A', fontFamily: "'Playfair Display', serif" }}>
-              ~{stats.temps_economise}h
-            </div>
-            <div style={{ fontSize: '12px', color: '#9A8A7A', marginTop: '4px' }}>Temps economise</div>
-          </div>
-        </div>
-      </div>
-
-      {/* TOKEN API */}
-      <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
-        <h2 style={{ margin: '0 0 16px', fontSize: '16px', color: '#1A1A1A' }}>Mon token API</h2>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-          padding: '12px', background: '#FAF6F1', borderRadius: '8px',
-          border: '1px solid #E8DDD0',
-        }}>
-          <code style={{
-            flex: 1, fontSize: '13px', color: '#6B4C2A',
-            fontFamily: 'monospace', wordBreak: 'break-all',
-          }}>
-            {showToken ? (profil?.token_api || '—') : maskedToken}
-          </code>
-          <button
-            onClick={() => setShowToken(!showToken)}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: '#9A8A7A', fontSize: '11px', fontFamily: "'Inter', sans-serif",
-              padding: '4px 8px',
-            }}
-          >
-            {showToken ? 'Masquer' : 'Voir'}
-          </button>
-          <button
-            onClick={copyToken}
-            style={{
-              background: 'none', border: '1px solid #E8DDD0', borderRadius: '6px',
-              cursor: 'pointer', padding: '6px 10px', display: 'flex',
-              alignItems: 'center', gap: '4px', fontSize: '12px',
-              color: copied ? '#2E7D32' : '#6B4C2A', fontFamily: "'Inter', sans-serif",
-            }}
-          >
-            {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
-            {copied ? 'Copie' : 'Copier'}
-          </button>
+          <div style={{ fontSize: '12px', color: '#9A8A7A', marginTop: '4px' }}>Actes ce mois</div>
         </div>
       </div>
 

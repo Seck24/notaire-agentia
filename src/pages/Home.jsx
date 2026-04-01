@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { FilePlus, TrendingUp, CheckCircle, Clock, Building2, FileText, Users, Gift, CreditCard, Scale, Lock, Home as HomeIcon } from 'lucide-react'
+import { FilePlus, Building2, FileText, Users, Gift, CreditCard, Scale, Lock, Home as HomeIcon } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 
 const quickActions = [
@@ -13,12 +13,6 @@ const quickActions = [
 export default function Home() {
   const navigate = useNavigate()
   const { stats } = useAppStore()
-
-  const statsCards = [
-    { label: 'Actes ce mois', value: stats.actes_ce_mois.toString(), icon: FileText, color: '#C8A882' },
-    { label: 'Temps economise', value: `~${stats.temps_economise}h`, icon: Clock, color: '#6B4C2A' },
-    { label: 'Actes generes', value: stats.actes_generes.toString(), icon: CheckCircle, color: '#A07050' },
-  ]
 
   return (
     <div style={{ padding: '32px 28px', maxWidth: '960px' }}>
@@ -66,34 +60,22 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '16px',
-        marginBottom: '28px',
-      }}>
-        {statsCards.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="card" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <div style={{ fontSize: '28px', fontFamily: "'Playfair Display', serif", fontWeight: 700, color: '#1A1A1A' }}>
-                {value}
-              </div>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '8px',
-                background: '#FAF6F1',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <Icon size={20} color={color} />
-              </div>
+      {/* Stat unique */}
+      <div style={{ marginBottom: '28px' }}>
+        <div className="card" style={{ padding: '20px', maxWidth: '220px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ fontSize: '28px', fontFamily: "'Playfair Display', serif", fontWeight: 700, color: '#1A1A1A' }}>
+              {stats.actes_ce_mois}
             </div>
-            <div style={{ fontSize: '13px', color: '#5A5A5A', fontWeight: 500 }}>{label}</div>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '8px',
+              background: '#FAF6F1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <FileText size={20} color="#C8A882" />
+            </div>
           </div>
-        ))}
+          <div style={{ fontSize: '13px', color: '#5A5A5A', fontWeight: 500 }}>Actes ce mois</div>
+        </div>
       </div>
 
       {/* Quick actions — LARGER cards */}
