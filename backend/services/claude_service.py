@@ -256,11 +256,15 @@ TOTAL FRAIS ET DROITS : {frais['total']:,} FCFA (soit {frais['ratio_prix']}% du 
             pass
 
     # Date de l'acte en lettres
-    date_raw = (donnees_structurees.get("date_acte", {}).get("date_acte")
-                or donnees_structurees.get("date_acte"))
+    _date_section = donnees_structurees.get("date_acte")
+    if isinstance(_date_section, dict):
+        date_raw = _date_section.get("date_acte")
+    elif isinstance(_date_section, str):
+        date_raw = _date_section
+    else:
+        date_raw = None
     if not date_raw:
-        from datetime import date as _today
-        date_raw = str(_today.today())
+        date_raw = str(_date.today())
     date_lettres = date_en_lettres(date_raw) or "L'AN DEUX MILLE VINGT-SIX"
 
     system_prompt = f"""Tu es un expert en rédaction d'actes notariaux en Côte d'Ivoire.
@@ -339,11 +343,15 @@ async def generer_dnsv(
     capital = societe.get("capital", "____")
     banque = societe.get("numero_compte", "____")
 
-    date_raw = (donnees_structurees.get("date_acte", {}).get("date_acte")
-                or donnees_structurees.get("date_acte"))
+    _date_section2 = donnees_structurees.get("date_acte")
+    if isinstance(_date_section2, dict):
+        date_raw = _date_section2.get("date_acte")
+    elif isinstance(_date_section2, str):
+        date_raw = _date_section2
+    else:
+        date_raw = None
     if not date_raw:
-        from datetime import date as _today
-        date_raw = str(_today.today())
+        date_raw = str(_date.today())
     date_lettres = date_en_lettres(date_raw) or "L'AN DEUX MILLE VINGT-SIX"
 
     system_prompt = f"""Tu es un notaire expert en droit des sociétés ivoirien.
