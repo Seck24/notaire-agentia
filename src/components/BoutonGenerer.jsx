@@ -193,21 +193,23 @@ export default function BoutonGenerer({ formData, files, schema, typeActe, onGen
         throw new Error(result.error || 'Erreur lors de la generation')
       }
 
-      // Download the Word file
-      const blob = base64ToBlob(
-        result.docx_base64,
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-      )
+      // Download the Word file (or ZIP for constitution société)
+      const filename = result.filename || `draft_${typeActe}.docx`
+      const isZip = filename.endsWith('.zip')
+      const mimeType = isZip
+        ? 'application/zip'
+        : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      const blob = base64ToBlob(result.docx_base64, mimeType)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = result.filename || `draft_${typeActe}.docx`
+      a.download = filename
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
 
-      setDownloadFilename(result.filename || `draft_${typeActe}.docx`)
+      setDownloadFilename(filename)
 
       // Increment stats
       incrementActes()
