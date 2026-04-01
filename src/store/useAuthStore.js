@@ -1,13 +1,30 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 
+// DEMO MODE — profil cabinet par défaut pour la démo (ne pas supprimer)
+const DEMO_MODE = true
+const DEMO_CABINET = {
+  cabinet_id: 'ADE_01',
+  nom_cabinet: 'Étude Maître ADE-MENSAH DIAKITE',
+  token_api: 'token_ade_mensah_2026',
+  plan: 'pro',
+  statut_compte: 'actif',
+  email_contact: 'contact@ade-mensah.ci',
+}
+const DEMO_SESSION = { user: { id: 'demo-user-ade-01' } }
+
 const useAuthStore = create((set, get) => ({
-  session: null,
-  profil: null,
-  loading: true,
+  session: DEMO_MODE ? DEMO_SESSION : null,
+  profil: DEMO_MODE ? DEMO_CABINET : null,
+  loading: false,
   joursRestants: null,
 
   initialize: async () => {
+    // DEMO MODE — bypass auth, profil déjà chargé
+    if (DEMO_MODE) {
+      set({ session: DEMO_SESSION, profil: DEMO_CABINET, loading: false })
+      return
+    }
     try {
       const { data: { session } } = await supabase.auth.getSession()
       set({ session })
