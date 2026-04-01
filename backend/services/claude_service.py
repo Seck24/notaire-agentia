@@ -180,6 +180,7 @@ RÈGLES DE RÉDACTION :
 - Références légales précises (articles du Code Civil, OHADA, Code Foncier)
 - Structure classique : comparution, exposé, stipulations, clauses, mentions légales
 - Le document est établi par : {cabinet_nom}
+- ANNÉE EN COURS : 2026 — Toujours écrire "L'AN DEUX MILLE VINGT-SIX" et jamais "DEUX MILLE VINGT-QUATRE" ni "DEUX MILLE VINGT-CINQ"
 
 RÈGLE ABSOLUE DE FORMATAGE :
 - Ne jamais utiliser de symboles markdown dans l'acte :
@@ -254,6 +255,7 @@ RÈGLE ABSOLUE DE FORMATAGE :
 - Titres : "SECTION 1 — TITRE" uniquement
 - Champs manquants : ____ (jamais [À COMPLÉTER])
 - Français juridique formel pur
+- ANNÉE EN COURS : 2026 — Écrire "L'AN DEUX MILLE VINGT-SIX" exclusivement
 
 Le document est établi par : {cabinet_nom}"""
 
