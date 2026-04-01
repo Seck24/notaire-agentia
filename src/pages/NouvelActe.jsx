@@ -14,7 +14,10 @@ export default function NouvelActe() {
   const navigate = useNavigate()
   const type = searchParams.get('type')
 
-  const [formData, setFormData] = useState({})
+  const todayISO = new Date().toISOString().slice(0, 10)
+  const [formData, setFormData] = useState({
+    date_acte: { date_acte: todayISO },
+  })
   const [files, setFiles] = useState({})
   const [showErrors, setShowErrors] = useState(false)
   const [extractedData, setExtractedData] = useState({})

@@ -5,6 +5,12 @@ export const SCHEMAS = {
     couleur: "#8B6914",
     sections: [
       {
+        id: "date_acte", label: "Date de l'acte",
+        fields: [
+          { id: "date_acte", label: "Date de rédaction de l'acte", type: "date", required: true }
+        ]
+      },
+      {
         id: "vendeur", label: "Vendeur", repetable: false,
         fields: [
           { id: "nom", label: "Nom", type: "text", required: true, placeholder: "Ex: KOUAME" },
@@ -57,6 +63,12 @@ export const SCHEMAS = {
     couleur: "#2D6A4F",
     sections: [
       {
+        id: "date_acte", label: "Date de l'acte",
+        fields: [
+          { id: "date_acte", label: "Date de rédaction de l'acte", type: "date", required: true }
+        ]
+      },
+      {
         id: "societe", label: "La Societe",
         fields: [
           { id: "denomination", label: "Denomination sociale", type: "text", required: true },
@@ -100,6 +112,12 @@ export const SCHEMAS = {
     couleur: "#6B4C8B",
     sections: [
       {
+        id: "date_acte", label: "Date de l'acte",
+        fields: [
+          { id: "date_acte", label: "Date de rédaction de l'acte", type: "date", required: true }
+        ]
+      },
+      {
         id: "defunt", label: "Le Defunt",
         fields: [
           { id: "nom", label: "Nom", type: "text", required: true },
@@ -142,6 +160,12 @@ export const SCHEMAS = {
     couleur: "#C55A11",
     sections: [
       {
+        id: "date_acte", label: "Date de l'acte",
+        fields: [
+          { id: "date_acte", label: "Date de rédaction de l'acte", type: "date", required: true }
+        ]
+      },
+      {
         id: "parties", label: "Les Parties",
         fields: [
           { id: "donateur_nom", label: "Nom Donateur", type: "text", required: true },
@@ -181,6 +205,12 @@ export const SCHEMAS = {
     icone: "CreditCard",
     couleur: "#1F4E79",
     sections: [
+      {
+        id: "date_acte", label: "Date de l'acte",
+        fields: [
+          { id: "date_acte", label: "Date de rédaction de l'acte", type: "date", required: true }
+        ]
+      },
       {
         id: "preteur", label: "Le Preteur",
         fields: [

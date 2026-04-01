@@ -7,6 +7,7 @@ import os
 import re
 import json
 from anthropic import Anthropic
+from datetime import date as _date
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 MODEL = "claude-sonnet-4-20250514"
@@ -19,6 +20,88 @@ def _get_client():
     if _client is None:
         _client = Anthropic(api_key=ANTHROPIC_API_KEY)
     return _client
+
+
+_UNITES = [
+    "", "UN", "DEUX", "TROIS", "QUATRE", "CINQ", "SIX", "SEPT", "HUIT", "NEUF",
+    "DIX", "ONZE", "DOUZE", "TREIZE", "QUATORZE", "QUINZE", "SEIZE",
+    "DIX-SEPT", "DIX-HUIT", "DIX-NEUF",
+]
+_DIZAINES = [
+    "", "", "VINGT", "TRENTE", "QUARANTE", "CINQUANTE",
+    "SOIXANTE", "SOIXANTE", "QUATRE-VINGT", "QUATRE-VINGT",
+]
+_MOIS = [
+    "", "JANVIER", "FEVRIER", "MARS", "AVRIL", "MAI", "JUIN",
+    "JUILLET", "AOUT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DECEMBRE",
+]
+_JOURS_ORDINAUX = {
+    1: "PREMIER", 2: "DEUX", 3: "TROIS", 4: "QUATRE", 5: "CINQ",
+    6: "SIX", 7: "SEPT", 8: "HUIT", 9: "NEUF", 10: "DIX",
+    11: "ONZE", 12: "DOUZE", 13: "TREIZE", 14: "QUATORZE", 15: "QUINZE",
+    16: "SEIZE", 17: "DIX-SEPT", 18: "DIX-HUIT", 19: "DIX-NEUF", 20: "VINGT",
+    21: "VINGT ET UN", 22: "VINGT-DEUX", 23: "VINGT-TROIS", 24: "VINGT-QUATRE",
+    25: "VINGT-CINQ", 26: "VINGT-SIX", 27: "VINGT-SEPT", 28: "VINGT-HUIT",
+    29: "VINGT-NEUF", 30: "TRENTE", 31: "TRENTE ET UN",
+}
+
+
+def _nombre_en_lettres(n: int) -> str:
+    """Convertit un entier (0-9999) en lettres majuscules françaises."""
+    if n == 0:
+        return "ZERO"
+    parts = []
+    if n >= 1000:
+        m = n // 1000
+        if m == 1:
+            parts.append("MILLE")
+        else:
+            parts.append(_nombre_en_lettres(m) + " MILLE")
+        n %= 1000
+    if n >= 100:
+        c = n // 100
+        if c == 1:
+            parts.append("CENT")
+        else:
+            parts.append(_UNITES[c] + " CENT")
+        n %= 100
+    if n >= 20:
+        d = n // 10
+        u = n % 10
+        if d == 7 or d == 9:  # soixante-dix / quatre-vingt-dix
+            base = _DIZAINES[d]
+            sub = u + 10
+            if sub == 11 and d == 7:
+                parts.append(base + " ET ONZE")
+            else:
+                parts.append(base + "-" + _UNITES[sub])
+        elif u == 0:
+            parts.append(_DIZAINES[d])
+        elif u == 1 and d != 8:
+            parts.append(_DIZAINES[d] + " ET UN")
+        else:
+            parts.append(_DIZAINES[d] + "-" + _UNITES[u])
+    elif n > 0:
+        parts.append(_UNITES[n])
+    return " ".join(parts)
+
+
+def date_en_lettres(date_str: str) -> str:
+    """
+    Convertit "2026-04-01" → "L'AN DEUX MILLE VINGT-SIX, LE PREMIER AVRIL"
+    Accepte aussi un objet date. Retourne une chaîne vide si la date est invalide.
+    """
+    try:
+        if isinstance(date_str, _date):
+            d = date_str
+        else:
+            d = _date.fromisoformat(str(date_str).strip())
+        annee = _nombre_en_lettres(d.year)
+        jour = _JOURS_ORDINAUX.get(d.day, str(d.day))
+        mois = _MOIS[d.month]
+        return f"L'AN {annee}, LE {jour} {mois}"
+    except Exception:
+        return ""
 
 
 def calculer_frais_vente(prix: float) -> dict:
@@ -172,6 +255,14 @@ TOTAL FRAIS ET DROITS : {frais['total']:,} FCFA (soit {frais['ratio_prix']}% du 
         except Exception:
             pass
 
+    # Date de l'acte en lettres
+    date_raw = (donnees_structurees.get("date_acte", {}).get("date_acte")
+                or donnees_structurees.get("date_acte"))
+    if not date_raw:
+        from datetime import date as _today
+        date_raw = str(_today.today())
+    date_lettres = date_en_lettres(date_raw) or "L'AN DEUX MILLE VINGT-SIX"
+
     system_prompt = f"""Tu es un expert en rédaction d'actes notariaux en Côte d'Ivoire.
 Tu rédiges des actes conformes au droit ivoirien et aux Actes Uniformes OHADA.
 
@@ -180,7 +271,9 @@ RÈGLES DE RÉDACTION :
 - Références légales précises (articles du Code Civil, OHADA, Code Foncier)
 - Structure classique : comparution, exposé, stipulations, clauses, mentions légales
 - Le document est établi par : {cabinet_nom}
-- ANNÉE EN COURS : 2026 — Toujours écrire "L'AN DEUX MILLE VINGT-SIX" et jamais "DEUX MILLE VINGT-QUATRE" ni "DEUX MILLE VINGT-CINQ"
+- DATE EXACTE DE L'ACTE : {date_lettres}
+  Utiliser EXACTEMENT cette formule en ouverture de l'acte (ex: "{date_lettres}")
+  Ne jamais écrire une autre année ou une autre date.
 
 RÈGLE ABSOLUE DE FORMATAGE :
 - Ne jamais utiliser de symboles markdown dans l'acte :
@@ -246,6 +339,13 @@ async def generer_dnsv(
     capital = societe.get("capital", "____")
     banque = societe.get("numero_compte", "____")
 
+    date_raw = (donnees_structurees.get("date_acte", {}).get("date_acte")
+                or donnees_structurees.get("date_acte"))
+    if not date_raw:
+        from datetime import date as _today
+        date_raw = str(_today.today())
+    date_lettres = date_en_lettres(date_raw) or "L'AN DEUX MILLE VINGT-SIX"
+
     system_prompt = f"""Tu es un notaire expert en droit des sociétés ivoirien.
 Rédige une DNSV (Déclaration Notariale de Souscription et de Versement)
 conforme au droit OHADA et ivoirien pour une SARL en constitution.
@@ -255,7 +355,7 @@ RÈGLE ABSOLUE DE FORMATAGE :
 - Titres : "SECTION 1 — TITRE" uniquement
 - Champs manquants : ____ (jamais [À COMPLÉTER])
 - Français juridique formel pur
-- ANNÉE EN COURS : 2026 — Écrire "L'AN DEUX MILLE VINGT-SIX" exclusivement
+- DATE EXACTE DE L'ACTE : {date_lettres} — Utiliser EXACTEMENT cette formule
 
 Le document est établi par : {cabinet_nom}"""
 
