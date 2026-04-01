@@ -19,7 +19,6 @@ export default function BandeauEssai() {
       padding: '8px 16px',
       fontSize: '13px',
       fontFamily: "'Inter', sans-serif",
-      display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '8px',
